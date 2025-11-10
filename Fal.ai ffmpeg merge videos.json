@@ -1,0 +1,412 @@
+{
+  "name": "Fal.ai ffmpeg merge videos",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "video_urls",
+              "type": "array"
+            },
+            {
+              "name": "resolution"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -32,
+        0
+      ],
+      "id": "f522c793-64d5-4609-9afd-ac35e721de09",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        896,
+        96
+      ],
+      "id": "706b0910-391f-4ddd-a52c-a15b838090bd",
+      "name": "Wait",
+      "webhookId": "0dc2221b-c5f8-48bd-baf0-275b15dd600a"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "82929740-5147-4564-83e9-a2c1c4da77c3",
+              "name": "request_id",
+              "value": "={{ $json.request_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1120,
+        96
+      ],
+      "id": "6a728463-d770-474a-8edc-ba68d58014c9",
+      "name": "Edit Fields6"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.status }}",
+                    "rightValue": "COMPLETED",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "4f67dace-29bd-44c9-8e7d-eed7b7a397a0"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "COMPLETED"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "646d96b0-abad-4eaf-98b7-f1e75855389f",
+                    "leftValue": "={{ $json.status }}",
+                    "rightValue": "ERROR",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "ERROR"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "576e742d-85bb-4f86-bcab-297acb4869f9",
+                    "leftValue": "={{ $json.status }}",
+                    "rightValue": "IN_PROGRESS",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "IN PROGRESS"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "f0c37634-0480-41ca-9bb4-0c1213615076",
+                    "leftValue": "={{ $json.status }}",
+                    "rightValue": "IN_QUEUE",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": " IN_QUEUE"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        624,
+        -32
+      ],
+      "id": "9c4f0ca6-976b-4e2e-80f1-02b6b837abc4",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8bae0f18-223f-45a3-b4ee-d733861dea79",
+              "name": "video url",
+              "value": "={{ $json.video.url }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1104,
+        -128
+      ],
+      "id": "8f57a428-045b-4c08-b796-536e8af3647e",
+      "name": "Get URLs"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://queue.fal.run/fal-ai/ffmpeg-api/requests{{ $json.request_id }}/status",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "9f1c1af9-722b-4e5e-bb33-76313be2932f",
+      "name": "Video Status",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "vxzhdrNxFwyNvSvJ",
+          "name": "Arasheed Fal Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://queue.fal.run/fal-ai/ffmpeg-api/requests/{{ $json.request_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        896,
+        -128
+      ],
+      "id": "139294a2-1ca6-438d-bfae-63e0884402ec",
+      "name": "Get Video",
+      "retryOnFail": true,
+      "alwaysOutputData": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "vxzhdrNxFwyNvSvJ",
+          "name": "Arasheed Fal Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://queue.fal.run/fal-ai/ffmpeg-api/merge-videos",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "video_urls",
+              "value": "={{ $json.image_url }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        160,
+        0
+      ],
+      "id": "0e70250a-4c67-439b-86df-e5f6c4093155",
+      "name": "Submit Video URLs",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "vxzhdrNxFwyNvSvJ",
+          "name": "Arasheed Fal Account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "video_urls": [
+            "https://tempfile.aiquickdraw.com/v/13e8d3bbdbe2ae3ad02a913fdb44b24c_1760708586.mp4",
+            "https://tempfile.aiquickdraw.com/v/94ab426838925978ccede5af0268c5a6_1760708666.mp4",
+            "https://tempfile.aiquickdraw.com/v/b4cb3441a618b1e50eb7780feb68eb96_1760708745.mp4",
+            "https://tempfile.aiquickdraw.com/v/c483e5327801a17bd2c34fca60c3c053_1760708823.mp4",
+            "https://tempfile.aiquickdraw.com/v/51707a9e00970df9eedd6c8353d98fcb_1760708892.mp4"
+          ]
+        }
+      }
+    ],
+    "Submit Video URLs": [
+      {
+        "json": {
+          "status": "IN_QUEUE",
+          "request_id": "84e658a9-7805-4b65-b4d0-4c6a18c6eec8",
+          "response_url": "https://queue.fal.run/fal-ai/ffmpeg-api/requests/84e658a9-7805-4b65-b4d0-4c6a18c6eec8",
+          "status_url": "https://queue.fal.run/fal-ai/ffmpeg-api/requests/84e658a9-7805-4b65-b4d0-4c6a18c6eec8/status",
+          "cancel_url": "https://queue.fal.run/fal-ai/ffmpeg-api/requests/84e658a9-7805-4b65-b4d0-4c6a18c6eec8/cancel",
+          "logs": null,
+          "metrics": {},
+          "queue_position": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields6": {
+      "main": [
+        [
+          {
+            "node": "Video Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Get Video",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [],
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Video Status": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Video": {
+      "main": [
+        [
+          {
+            "node": "Get URLs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Submit Video URLs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Submit Video URLs": {
+      "main": [
+        [
+          {
+            "node": "Video Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "c43b4913-d69a-4912-a2cd-4c4a126bd857",
+  "meta": {
+    "instanceId": "a5ce708af879277dd7a639d4c71ccbb43dff04b68ea0eebb67bedcb2e448ec48"
+  },
+  "id": "bM3o0dbYZRgsFepd",
+  "tags": []
+}

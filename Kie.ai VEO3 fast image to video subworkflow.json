@@ -1,0 +1,416 @@
+{
+  "name": "Kie.ai VEO3 fast image to video subworkflow",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "video_prompt"
+            },
+            {
+              "name": "aspect_ratio"
+            },
+            {
+              "name": "imageUrls",
+              "type": "array"
+            },
+            {
+              "name": "generationType"
+            }
+          ]
+        }
+      },
+      "id": "1a2ad5b2-dbde-47a3-82fb-c44cb102cbf4",
+      "typeVersion": 1.1,
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        -1600,
+        336
+      ]
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -544,
+        480
+      ],
+      "id": "60c7b747-a98c-46af-b49d-1cff51ff1ed0",
+      "name": "Wait2",
+      "webhookId": "ccad76b6-9b6b-4de2-a5db-847b380cd457"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "81d332c2-2e17-43d9-bf85-a7fba1d8598b",
+              "name": "data.taskId",
+              "value": "={{ $json.data.taskId }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -368,
+        480
+      ],
+      "id": "efd21bea-8f93-49d9-b512-13c91fa6520b",
+      "name": "Edit Fields14"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.data.successFlag }}",
+                    "rightValue": 1,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    },
+                    "id": "7e51e0bd-c19b-4e57-bd46-885e531aff52"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Completed"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "d3a0615b-8384-4ec3-b18b-daae9e6a350b",
+                    "leftValue": "={{ $json.data.successFlag }}",
+                    "rightValue": 3,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Failed"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "2495be20-ec23-4de3-a53f-baa79d75862e",
+                    "leftValue": "={{ $json.data.successFlag }}",
+                    "rightValue": 2,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Failed"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "4c1dba3d-a788-4205-bb9e-51b0aa892c61",
+                    "leftValue": "={{ $json.data.successFlag }}",
+                    "rightValue": 0,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Retry"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -896,
+        304
+      ],
+      "id": "2eececf5-64cc-44be-af71-f6a66cc4e6cf",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "921e029e-6808-401a-8f1f-df59fcc8a78f",
+              "name": "resultUrls",
+              "value": "={{ $json.data.response.resultUrls.find(item => true) }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -688,
+        208
+      ],
+      "id": "83af0557-713c-4659-9b40-ce2f7bb217ac",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.kie.ai/api/v1/veo/generate",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "=prompt",
+              "value": "={{ $json.video_prompt }}"
+            },
+            {
+              "name": "=model",
+              "value": "=veo3_fast"
+            },
+            {
+              "name": "=aspectRatio",
+              "value": "={{ $json.aspect_ratio }}"
+            },
+            {
+              "name": "=seeds",
+              "value": "=12345"
+            },
+            {
+              "name": "=enableFallback",
+              "value": "={{false}}"
+            },
+            {
+              "name": "=enableTranslation",
+              "value": "={{true}}"
+            },
+            {
+              "name": "=imageUrls",
+              "value": "={{ $json.imageUrls }}"
+            },
+            {
+              "name": "generationType",
+              "value": "={{ $json.generationType }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1376,
+        336
+      ],
+      "id": "6df3aad7-9ae3-4e5e-be53-6bfe1a186f51",
+      "name": "Submit generation request",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "Q3s4hKQMBpaG9ulx",
+          "name": "Arasheed Kie.AI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.kie.ai/api/v1/veo/record-info",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "taskId",
+              "value": "={{ $json.data.taskId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1120,
+        336
+      ],
+      "id": "a347627d-9b5a-4f5f-b537-63b292d73c9b",
+      "name": "Get request status",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "Q3s4hKQMBpaG9ulx",
+          "name": "Arasheed Kie.AI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "### Generation Types\t\n\n• TEXT_2_VIDEO — Text-to-video: using text prompts only\n• FIRST_AND_LAST_FRAMES_2_VIDEO — First and last frames to video: generate transition videos using two images\n• REFERENCE_2_VIDEO — Material-to-video: based on material images (only supports Fast model and 16:9 aspect ratio)\n\n### Aspect Ratio\n16:9  for landscape\n9:16   for portrait",
+        "height": 288,
+        "width": 480
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -2224,
+        288
+      ],
+      "typeVersion": 1,
+      "id": "e9a2a497-0a4e-47fc-9aae-a7123add8415",
+      "name": "Sticky Note"
+    }
+  ],
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "video_prompt": "Who in Frame: Two Bronze Age men (30s & 40s) patching a small reed boat pulled onto the muddy shore. Clothing/Tools: Linen kilts; leather sandals; bone awl; tar-coated pitch resin pot; reed bundles. Environment Details: River edge; moored boats; baskets of fish; waterline reeds. Lighting & Atmosphere: Noon glare reflecting on wet hull; rippling light on faces. Camera: 28 mm; crouched profile; handheld drift 0.2 m/s; f/5.6 for context depth. Output Notes: Squish of mud; soft resin stretch sound. Narrative Intent: Maintenance sustains mobility along the trade river.",
+          "aspect_ratio": "16:9",
+          "imageUrls": null,
+          "generationType": "TEXT_2_VIDEO"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Submit generation request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait2": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields14",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields14": {
+      "main": [
+        [
+          {
+            "node": "Get request status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [],
+        [],
+        [
+          {
+            "node": "Wait2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Submit generation request": {
+      "main": [
+        [
+          {
+            "node": "Get request status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get request status": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "532928c0-9645-4524-961d-a1134ed5a606",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a5ce708af879277dd7a639d4c71ccbb43dff04b68ea0eebb67bedcb2e448ec48"
+  },
+  "id": "tTq0WWbv4FfwYmRy",
+  "tags": []
+}

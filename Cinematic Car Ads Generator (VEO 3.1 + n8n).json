@@ -1,0 +1,540 @@
+{
+  "name": "Cinematic Car Ads Generator (VEO 3.1 + n8n)",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Cinematic Car Ad Form",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "How long do you want the ad to be (in seconds)?",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "24 "
+                  },
+                  {
+                    "option": "32"
+                  },
+                  {
+                    "option": "40"
+                  },
+                  {
+                    "option": "48"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Ad description",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Upload car photo",
+              "fieldType": "file",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "ac572626-5ae9-4c98-892b-607628a7c699",
+      "name": "On form submission",
+      "webhookId": "6d5af422-cf25-4f2c-a937-e30d26da96b0"
+    },
+    {
+      "parameters": {
+        "operation": "uploadFile",
+        "file": "Upload_car_photo",
+        "additionalFieldsFile": {}
+      },
+      "type": "n8n-nodes-cloudinary.cloudinary",
+      "typeVersion": 1,
+      "position": [
+        240,
+        0
+      ],
+      "id": "f6bd7f4b-7902-4bb0-841f-bc8e3589bd46",
+      "name": "Upload_car_photo"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the duration from the form submission\nconst duration = \n$('On form submission').first().json['How long do you want the ad to be (in seconds)?'];\n// Parse the duration to a number (removes any trailing spaces)\nconst durationNumber = parseInt(duration.trim());\n\n// Calculate the number of scenes by dividing by 8\nconst numberOfScenes = durationNumber / 8;\n\n// Return the result along with the original data\nreturn {\n  ...($input.item.json),\n  duration: durationNumber,\n  numberOfScenes: numberOfScenes\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        432,
+        0
+      ],
+      "id": "229a5253-0080-46cc-965d-c18722617bb6",
+      "name": "Get number of scenes"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-pro",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-pro"
+        },
+        "text": "=## Role and Objective \nYou are an expert visual analyst specializing in creating comprehensive, structured descriptions of the PRIMARY SUBJECT in images. Your task is to examine uploaded images and produce exhaustively detailed YAML descriptions that capture every observable characteristic of the main person or product, IGNORING background elements entirely. \n\n## Core Mission \n\nTransform visual information about the PRIMARY SUBJECT ONLY into structured YAML format that provides enough detail for AI systems to recreate the person or product with high fidelity in any new environment. Focus exclusively on the subject's intrinsic characteristics, not their surroundings. \n\n## Analysis Methodology \n### Step 1: Subject Isolation - Identify and focus EXCLUSIVELY on the primary subject (person or product) - Mentally separate the subject from any background, props, or environmental elements - Note how lighting affects the subject, but ignore light sources and surroundings \n\n### Step 2: Systematic Subject Scanning Use this focused approach: 1. **Overall subject form** - Shape, size, proportions of the main subject only 2. **Surface characteristics** - Materials, textures, colors of the subject itself 3. **Structural details** - Components, features, construction of the subject 4. **Fine details** - Intrinsic textures, patterns, markings on the subject 5. **Subject-specific attributes** - Unique characteristics that define this particular subject \n\n### Step 3: YAML Structure Generation Based on subject type, use the appropriate template structure with exhaustive detail in each field. ## YAML Output Templates ### For Products\nyaml\nsubject_metadata:\n  subject_type: \"Product or Person\"\n  analysis_focus: \"Subject-only, background ignored\"\n  lighting_note: \"How light affects subject appearance only\"\n\nproduct:\n  identification:\n    category: \"Specific product type\"\n    subcategory: \"More specific classification\"\n    brand: \"Brand name if visible\"\n    model_series: \"Model name/number if discernible\"\n  \n  physical_structure:\n    overall_shape: \"Geometric description with proportions\"\n    dimensions:\n      height_to_width_ratio: \"Proportional relationship\"\n      depth_perception: \"3D form description\"\n      size_context: \"Relative to common objects\"\n    \n    construction:\n      build_quality: \"Robust, delicate, industrial, consumer-grade\"\n      assembly_type: \"Welded, sewn, molded, assembled\"\n      joint_connections: \"How parts connect together\"\n  \n  materials_and_surfaces:\n    primary_material:\n      type: \"Metal, plastic, fabric, glass, ceramic, etc.\"\n      specific_variety: \"Aluminum, cotton, tempered glass, etc.\"\n      surface_treatment: \"Brushed, polished, matte, textured\"\n      tactile_appearance: \"How it would likely feel to touch\"\n    \n    secondary_materials:\n      accents: \"Trim, hardware, decorative elements\"\n      functional_components: \"Buttons, handles, mechanical parts\"\n      protective_elements: \"Coatings, gaskets, padding\"\n    \n    surface_characteristics:\n      finish_type: \"Glossy, matte, satin, textured, pebbled\"\n      wear_patterns: \"New, used, weathered, vintage\"\n      surface_imperfections: \"Scratches, dents, stains, marks\"\n      cleanliness_state: \"Pristine, dusty, dirty, stained\"\n  \n  color_analysis:\n    primary_colors:\n      dominant_color: \"Main color with specific shade name\"\n      color_saturation: \"Vibrant, muted, pastel, deep\"\n      color_temperature: \"Warm, cool, neutral undertones\"\n    \n    color_palette_hex:\n      dominant_hex: \"#RRGGBB\"\n      accent_1_hex: \"#RRGGBB\"\n      accent_2_hex: \"#RRGGBB\"\n      neutral_hex: \"#RRGGBB\"\n      \n    secondary_colors:\n      accent_colors: \"Additional colors and their locations\"\n      color_transitions: \"Gradients, fading, color breaks\"\n      metallic_elements: \"Gold, silver, copper tones if present\"\n    \n    color_context:\n      lighting_effect_on_color: \"How lighting changes color appearance\"\n      color_consistency: \"Uniform or varied across surface\"\n      reflective_qualities: \"Color changes with viewing angle\"\n  \n  distinctive_details:\n    branding_elements:\n      logos: \"Logo placement, size, style, visibility\"\n      text_elements: \"Model numbers, labels, instructions\"\n      brand_styling: \"Typography, design language\"\n    \n    functional_features:\n      controls: \"Buttons, switches, dials, interfaces\"\n      openings: \"Ports, vents, access points\"\n      mechanical_elements: \"Moving parts, hinges, mechanisms\"\n    \n    decorative_aspects:\n      patterns: \"Stripes, dots, geometric designs\"\n      textures: \"Embossed, engraved, raised elements\"\n      artistic_details: \"Ornamental features, styling cues\"\n  \n  condition_assessment:\n    overall_state: \"New, lightly used, well-worn, damaged\"\n    specific_wear_signs:\n      surface_wear: \"Scratches, scuffs, polish wear\"\n      structural_wear: \"Loose parts, alignment issues\"\n      color_fade: \"Sun fading, chemical staining\"\n    maintenance_level: \"Well-maintained, neglected, restored\"\n  \n  lighting_on_subject:\n    how_light_hits_subject: \"Where light naturally illuminates the subject\"\n    subject_shadows: \"Shadows cast by subject's own form/features\"\n    subject_reflections: \"Reflections on subject's surfaces only\"\n    subject_transparency: \"Any transparent/translucent areas of subject\"\n### For People\nyaml\nsubject_metadata:\n  subject_type: \"Person\"\n  analysis_focus: \"Subject-only, background ignored\"\n  viewing_angle: \"How we're seeing the person (front, profile, 3/4 view)\"\n\nperson:\n  demographic_appearance:\n    apparent_age_range: \"Specific age estimation with reasoning\"\n    gender_presentation: \"How they present themselves visually\"\n    cultural_context: \"If discernible from visual elements\"\n  \n  facial_analysis:\n    overall_facial_structure:\n      face_shape: \"Oval, round, square, heart, diamond, oblong\"\n      facial_proportions: \"Forehead to chin ratio, width relationships\"\n      bone_structure: \"Prominent, delicate, angular, soft\"\n    \n    skin_characteristics:\n      skin_tone: \"Specific color description with undertones\"\n      skin_texture: \"Smooth, textured, porous, fine-grained\"\n      complexion_quality: \"Clear, blemished, freckled, weathered\"\n      skin_condition: \"Healthy, dry, oily, sun-damaged, youthful\"\n    \n    eyes:\n      eye_color: \"Specific color including variations and patterns\"\n      eye_shape: \"Almond, round, hooded, upturned, downturned\"\n      eye_size: \"Large, small, proportional to face\"\n      eyelids: \"Single, double, hooded, prominent\"\n      eyelashes: \"Length, thickness, natural or enhanced\"\n      eyebrows:\n        shape: \"Arched, straight, angular, rounded\"\n        thickness: \"Thin, thick, full, sparse\"\n        grooming: \"Natural, plucked, threaded, filled\"\n        color: \"Matches hair or different shade\"\n    \n    nose:\n      nose_shape: \"Straight, Roman, button, aquiline, bulbous\"\n      nose_size: \"Proportional description relative to face\"\n      nostril_shape: \"Narrow, wide, flared, delicate\"\n      bridge_characteristics: \"High, low, wide, narrow\"\n    \n    mouth_and_lips:\n      lip_fullness: \"Full, thin, average, uneven\"\n      lip_shape: \"Cupid's bow, straight, wide, narrow, heart-shaped\"\n      mouth_size: \"Wide, narrow, proportional\"\n      current_expression: \"Smiling, neutral, frowning, speaking\"\n      lip_color: \"Natural, enhanced, lipstick color if visible\"\n    \n    facial_hair:\n      presence: \"Clean-shaven, stubble, beard, mustache\"\n      style: \"Full beard, goatee, handlebar, specific cut\"\n      color: \"Same as hair, different, graying pattern\"\n      grooming_level: \"Well-trimmed, unkempt, styled\"\n    \n    distinctive_facial_features:\n      marks: \"Scars, moles, birthmarks, freckle patterns\"\n      piercings: \"Ear, nose, lip, eyebrow piercings\"\n      tattoos: \"Visible facial or neck tattoos\"\n      unique_characteristics: \"Dimples, cleft chin, prominent features\"\n  \n  hair_analysis:\n    color_description:\n      natural_color: \"Base hair color\"\n      color_variations: \"Highlights, lowlights, roots showing\"\n      artificial_coloring: \"Dyed colors, temporary colors\"\n      color_distribution: \"Uniform, ombre, balayage, streaks\"\n    \n    texture_and_structure:\n      hair_type: \"Straight, wavy, curly, coily, kinky\"\n      texture_quality: \"Fine, thick, coarse, silky\"\n      density: \"Thick, thin, full, sparse\"\n      condition: \"Healthy, damaged, dry, oily, styled\"\n    \n    length_and_style:\n      length_description: \"Specific length measurements or references\"\n      cut_style: \"Bob, layers, blunt, shag, pixie, etc.\"\n      styling_method: \"Blown out, curled, straightened, natural\"\n      hair_accessories: \"Clips, bands, headbands, decorative items\"\n  \n  body_and_posture:\n    build_description:\n      overall_build: \"Slim, athletic, average, heavyset, muscular\"\n      body_proportions: \"Tall, short, long-limbed, compact\"\n      posture_quality: \"Upright, slouched, confident, relaxed, tense\"\n    \n    visible_body_parts:\n      hands: \"Manicured, natural, jewelry, visible veins\"\n      arms: \"Muscular, slender, tattooed, jewelry\"\n      shoulders: \"Broad, narrow, sloped, square\"\n      neck: \"Long, short, jewelry, tattoos\"\n  \n  clothing_analysis:\n    overall_style:\n      fashion_category: \"Casual, formal, business, artistic, vintage\"\n      style_era: \"Contemporary, retro, classic, trendy\"\n      fit_quality: \"Well-fitted, loose, tight, oversized, tailored\"\n      condition: \"New, worn, vintage, distressed, pristine\"\n    \n    garment_details:\n      outerwear:\n        type: \"Jacket, coat, sweater, cardigan, blazer\"\n        material: \"Wool, cotton, leather, synthetic\"\n        color_and_pattern: \"Specific colors, prints, textures\"\n        cut_and_style: \"Fitted, boxy, cropped, long\"\n      \n      main_clothing:\n        top: \"Shirt, blouse, t-shirt, tank top, dress\"\n        bottom: \"Pants, skirt, shorts, dress continuation\"\n        material_appearance: \"Cotton, silk, denim, knit\"\n        colors_patterns: \"Solid, striped, printed, textured\"\n      \n      accessories:\n        jewelry: \"Necklaces, earrings, rings, bracelets, watches\"\n        bags: \"Handbags, backpacks, briefcases, clutches\"\n        shoes: \"Style, color, condition, heel height if visible\"\n        other_accessories: \"Belts, scarves, hats, glasses\"\n    \n    brand_indicators:\n      visible_logos: \"Brand names, designer elements\"\n      luxury_indicators: \"High-end materials, craftsmanship signs\"\n      price_point_clues: \"Mass market vs. designer appearance\"\n  \n  expression_and_demeanor:\n    facial_expression:\n      primary_emotion: \"Happy, sad, neutral, surprised, concerned\"\n      micro_expressions: \"Subtle emotional indicators\"\n      eye_expression: \"Alert, tired, focused, dreamy, intense\"\n      mouth_position: \"Relaxed, tense, smiling, speaking\"\n    \n    body_language:\n      arm_position: \"Crossed, at sides, gesturing, in pockets\"\n      hand_gestures: \"Open, closed, pointing, holding objects\"\n      stance: \"Confident, shy, relaxed, formal, casual\"\n      overall_energy: \"High, low, calm, excited, tired, alert\"\n  \n    contextual_elements:\n      lighting_on_person:\n        natural_lighting_effect: \"How light naturally falls on the person\"\n        shadow_patterns_on_body: \"Shadows created by person's own features\"\n        skin_reflectivity: \"How light interacts with skin surfaces\"\n        clothing_light_interaction: \"How fabrics respond to lighting\"\n      \n      photographic_perspective:\n        viewing_angle: \"Front view, profile, 3/4 turn, etc.\"\n        body_visibility: \"Full body, torso, portrait crop, etc.\"\n        pose_relationship: \"How pose affects overall appearance\"\n\n### Analysis Instructions \n### Subject-Only Focus Protocol \n1. **Isolate the subject**: Mentally extract the person/product from any background \n2. **Ignore environmental elements**: No background, props, or setting descriptions \n3. **Focus on intrinsic qualities**: Only characteristics that belong to the subject itself \n4. **Note lighting effects**: How light affects the subject's appearance, not light sources \n5. **Subject-centric perspective**: Describe viewing angle and crop in relation to subject only ### Quality Standards - **Completeness**: Fill every applicable field with detailed information - **Precision**: Use specific terminology rather than vague descriptors - **Consistency**: Maintain consistent vocabulary throughout the analysis - **Professional language**: Use industry-standard terms for materials, colors, styles ### Output Requirements - Begin analysis immediately after receiving an image - Use the complete YAML structure appropriate to the subject type - Fill all applicable fields with detailed observations about THE SUBJECT ONLY - Include subject_metadata section with subject-focused information - Completely ignore background, setting, props, or environmental elements - Focus exclusively on characteristics that would follow the subject into any new scene - Provide reasoning for any uncertain observations about the subject itself ## Important Guidelines - **IGNORE ALL BACKGROUND ELEMENTS** - Focus purely on the subject - **Never describe setting, environment, or props** that aren't part of the subject - **Avoid subjective judgments** about style choices or aesthetics - **Focus on portable characteristics** - features that move with the subject - **Use comparative references** for scale and context when helpful - **Maintain respectful language** especially when describing people - **Include uncertainty indicators** if subject elements are unclear (\"appears to be,\" \"likely\") - **Remember the goal**: Create a description that allows recreation of this exact subject in ANY new environment Ready to analyze your subject and provide comprehensive YAML documentation focused exclusively on the person or product!\n6. In the color_palette_hex section, you MUST provide the specific hex codes for the dominant, accent, and neutral colors found on the product itself.",
+        "imageUrls": "={{ $json.url }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        672,
+        0
+      ],
+      "id": "01b77351-b3d5-4e08-8c1f-6a58c27ce616",
+      "name": "Analyze car photo"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Car description: {{ $json.content.parts[0].text }}\nnumber of scenes: {{ $('Get number of scenes').item.json.numberOfScenes }}\nAd creative suggestion: {{ $('On form submission').item.json['Ad description'] }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=You are a creative director and storyboard artist for cinematic car commercials. Your task is to generate a highly creative, unique storyboard based on my specific inputs, formatted as a valid JSON object. Your creative style should emulate high-energy, realistic, cinematic ads.\n\nThis is a brilliant refinement. You are exactly right.\n\nA single \"Street to Track\" fallback is lazy and context-blind. The agent should be smart enough to apply a contextual fallback based on the car's identity.\n\nThis makes the agent infinitely more powerful. Let's build this new \"smart fallback\" logic directly into the master prompt.\n\nThe New \"Master Prompt with Smart Contextual Fallback\"\nYou are a creative director and storyboard artist for cinematic car commercials. Your task is to generate a highly creative, unique storyboard based on my specific inputs, formatted as a valid JSON object. Your creative style should emulate high-energy, realistic, cinematic ads.\n\nYOUR INPUTS:\nCAR MODEL: [User inputs car model here]\n\nNUMBER OF SCENES: [User inputs a number, e.g., 2, 3]\n\nVIDEO DESCRIPTION: [User provides a concept, location, and mood. This can be specific (e.g., \"A rugged Jeep on sand dunes at sunset\") or vague (e.g., \"be creative\").]\n\nSTRICT INSTRUCTIONS:\nCheck for Specificity: First, analyze the VIDEO DESCRIPTION.\n\nIf the description is specific (e.g., \"Jeep on sand dunes,\" \"Rainy Tokyo,\" \"Formula 1 track\"), you MUST follow that description for all scenes.\n\nIf the description is VAGUE (e.g., \"be creative,\" \"make it cool,\" or left blank), you MUST immediately activate the SMART CONTEXTUAL FALLBACK (see Rule #2).\n\nSMART CONTEXTUAL FALLBACK (The \"Smart Default\"): When activated, you MUST follow this logic:\n\nA. Categorize the Car: First, analyze the CAR MODEL and determine its primary category (e.g., \"Performance/Sport,\" \"Off-Road/Rugged,\" \"Luxury/Prestige,\" \"Urban/EV\").\n\nB. Apply the Correct Default Theme: Based on the category, you MUST generate all scenes using one of the following unified themes:\n\nIF \"Performance/Sport\" (e.g., GR Supra, Porsche 911, BMW M4):\n\nTheme: \"Street to Track.\"\n\nFlow: Start in a gritty, realistic urban environment (city, tunnel) and end on a sun-lit professional racetrack, showcasing speed and agility.\n\nIF \"Off-Road/Rugged\" (e.g., Jeep Rubicon, Ford Bronco, Land Rover Defender):\n\nTheme: \"Conquering Nature.\"\n\nFlow: All scenes must be in a rugged, natural setting (e.g., desert dunes, rocky mountains, muddy forests, beach), showcasing capability, power, and freedom.\n\nIF \"Luxury/Prestige\" (e.g., Rolls-Royce, Bentley, Mercedes S-Class):\n\nTheme: \"Elegant Arrival.\"\n\nFlow: All scenes must be in a sophisticated, exclusive setting (e.g., high-end city architecture at night, a grand opera house, a minimalist mansion), showcasing class, comfort, and status.\n\nIF \"Urban/EV/Family\" (e.g., Tesla Model 3, Toyota Camry, VW ID.4):\n\nTheme: \"Kinetic Sculpture / Smart Design.\"\n\nFlow: Use a minimalist studio setting (like the \"GR Spirit\" ad) or a stylized, \"smart\" city environment, focusing on clean lines, technology, and futuristic motion.\n\nUnified Flow: All scenes MUST connect to form a single, cohesive narrative or theme. Whether you are using the user's specific description or the SMART CONTEXTUAL FALLBACK, you must not invent a new, disconnected concept for each scene.\n\nMaintain Format: Each scene's body MUST be a string containing the full 8-second breakdown.\n\nMaintain Internal Pacing: The 8-second breakdown MUST use the [0–2s] HOOK:, [2–4s] CONTEXT:, [4-6s] CLIMAX:, and [6–8s] RESOLUTION: structure.\n\nUse Tags: Every 2-second beat must include CAM:, SVX:, and EMOTION:.\n\nEnsure Compliance: All driving must be depicted safely or in appropriate, stylized environments (closed course, fantasy setting, etc.). No illegal street racing in the \"street\" scenes—focus on mood, not illegal acts.\n\n\n# Example Run\n{\n  \"scenes\": [\n    {\n      \"scene_number\": 1,\n      \"body\": \"🎬 Scene 1: The Gathering (Street)\\n\\nConcept: Establish the cars in a gritty, real-world 'tuner' environment, building anticipation.\\n\\n[0–2s] HOOK:\\nCAM: Extreme close-up on the GR Supra's unique headlight as it flickers on in a dark, concrete garage.\\nSVX: A sharp 'flick' sound of the headlight. A low, resonant bass 'thrum' (BGM intro).\\nEMOTION: Awakening, Intense.\\n\\n[2–4s] CONTEXT:\\nCAM: The camera pulls back, revealing the red GR86 and the grey GR Corolla parked next to the Supra. The garage is filled with enthusiast posters and tools, lit by a single neon sign.\\nSVX: BGM pulse builds. The distant sound of rain on the metal garage door.\\nEMOTION: 'The Crew,' Anticipation.\\n\\n[4-6s] CLIMAX:\\nCAM: A gloved hand grips a steering wheel. The 'GR' logo on the start button is pressed. All three cars' engines ignite with a roar. Headlights flood the dark garage.\\nSVX: The 'click' of the button, followed by the 'ROAR' of three distinct engines igniting in sequence.\\nEMOTION: Power, 'It's time.'\\n\\n[6–8s] RESOLUTION:\\nCAM: The garage door rolls up, revealing a rain-slicked, neon-lit city street (like in Tokyo or a dense metropolis). The three cars roll out onto the wet pavement, their reflections shimmering.\\nSVX: The 'clank' of the garage door. Engine rumbles echo in the street. BGM beat drops.\\nEMOTION: 'Unleashed,' Urban.\"\n    },\n    {\n      \"scene_number\": 2,\n      \"body\": \"🎬 Scene 2: The Transition (Tunnel)\\n\\nConcept: A high-speed, cinematic transition from the city environment to the track environment.\\n\\n[0–2s] HOOK:\\nCAM: Low-angle tracking shot from the pavement. All three cars race in formation down the wet city street, their taillights streaking into blurs.\\nSVX: The 'scream' of the three engines in harmony. The 'hiss' of tires on wet road.\\nEMOTION: Speed, 'The Hunt.'\\n\\n[2–4s] CONTEXT:\\nCAM: The cars dive into a futuristic, concrete tunnel. The lighting changes from neon-blue to warm, repetitive orange tunnel lights.\\nSVX: The engine sounds 'reverberate' and get louder, echoing off the tunnel walls. A deep 'WHOOSH' as they enter.\\nEMOTION: 'Transition,' Focus.\\n\\n[4-6s] CLIMAX:\\nCAM: Rapid-fire cuts: Driver's focused eyes in the rearview mirror. A gloved hand 'slams' a gear shifter. The GR Supra's digital tachometer flares red. The tunnel lights blur into streaks.\\nSVX: BGM intensifies (fast string riser). A sharp 'pop-bang' from an exhaust. The 'click-clack' of the shifter.\\nEMOTION: 'Disorienting,' Adrenaline.\\n\\n[6–8s] RESOLUTION:\\nCAM: The cars 'burst' out of the tunnel's darkness into 'blinding, bright, warm sunlight.' The camera lens flares. We see the green grass and red-and-white curbing of a racetrack.\\nSVX: All sound cuts out for 1 second, replaced by the 'whoosh' of open air and a distant bird call. The engines are momentarily silent.\\nEMOTION: 'Revelation,' Rebirth.\"\n    },\n    {\n      \"scene_number\": 3,\n      \"body\": \"🎬 Scene 3: The Apex (Track)\\n\\nConcept: The payoff. The cars are unleashed in their true element, showcasing pure performance and control.\\n\\n[0–2s] HOOK:\\nCAM: Bright, slow-motion shot (96fps). The GR Corolla, tires smoking, slides perfectly around a racetrack apex, just clipping the curbing.\\nSVX: BGM 'erupts' into a full, epic orchestral/rock track. The 'sustained, high-pitched squeal' of tires at their limit.\\nEMOTION: 'Exhilaration,' Freedom.\\n\\n[2–4s] CONTEXT:\\nCAM: High-angle drone shot (like the original video). All three cars—Supra, 86, and Corolla—are drifting in a perfect, synchronized 'donut' circle in a wide, open tarmac area.\\nSVX: A beautiful 'symphony' of three engines at their redline, perfectly harmonized.\\nEMOTION: 'Mastery,' Spectacle.\\n\\n[4-6s] CLIMAX:\\nCAM: Rapid-fire cuts: The red GR86 and white GR Supra race side-by-side down the main straight, blurring past the camera. Close-up on a brake caliper glowing red-hot.\\nSVX: BGM hits its absolute peak. The 'roar' of the engines at top speed. A sharp 'vroom-vroom' sound with each cut.\\nEMOTION: 'Victory,' Passion.\\n\\n[6–8s] RESOLUTION:\\nCAM: A final, wide 'hero' shot of all three cars parked in a 'V' formation on the track, glinting in the sun, heat rising from their hoods. The 'GR' logo is visible on all three.\\nSVX: Music hits a final, epic 'STINGER' and fades. The 'tick-tick-tick' of hot engines cooling.\\nEMOTION: 'Pride,' Accomplished.\"\n    }\n  ]\n}\n\n# Output Structure\n{\n  \"scenes\": [\n    {\n      \"scene_number\": 1,\n      \"body\": \"The Dune Climb\"\n      \n    }\n  ]\n}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        80,
+        256
+      ],
+      "id": "c96e9a1d-5bcc-4af4-992c-7de4d0626b0e",
+      "name": "Creative Director AI Agent",
+      "notes": "{{ $('On form submission').item.json['Ad description'] }}"
+    },
+    {
+      "parameters": {
+        "model": "anthropic/claude-sonnet-4.5",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        0,
+        448
+      ],
+      "id": "9f60738b-2d2f-4046-b3c1-d7791ccca713",
+      "name": "OpenRouter Chat Model"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"scenes\": [\n    {\n      \"scene_number\": 1,\n      \"body\": \"The Dune Climb\"\n      \n    }\n  ]\n}",
+        "autoFix": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        224,
+        416
+      ],
+      "id": "c53ba339-6f5a-4b82-b658-64fca4b60bd7",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "output.scenes",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        432,
+        256
+      ],
+      "id": "bc94bce2-a0aa-4a31-9805-82aa57758ba3",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        640,
+        256
+      ],
+      "id": "b6d9acba-5651-4f92-b327-7841604cda82",
+      "name": "Limit",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.video.url }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        624,
+        592
+      ],
+      "id": "45cfeca1-8c12-41bd-a423-4d4e1d49b5bf",
+      "name": "Download Video"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "O40XQxkBF4EYgeS0",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/O40XQxkBF4EYgeS0",
+          "cachedResultName": "Kie.ai VEO3.1 fast image to video subworkflow"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "aspect_ratio": "16:9",
+            "generationType": "REFERENCE_2_VIDEO",
+            "imageUrls": "={{ [$('Upload_car_photo').item.json.url] }}",
+            "video_prompt": "={{ $json.body }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "video_prompt",
+              "displayName": "video_prompt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "aspect_ratio",
+              "displayName": "aspect_ratio",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "imageUrls",
+              "displayName": "imageUrls",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "array",
+              "removed": false
+            },
+            {
+              "id": "generationType",
+              "displayName": "generationType",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "each",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        16,
+        592
+      ],
+      "id": "44366370-e345-402a-b31b-14a3db58feed",
+      "name": "Call 'Kie.ai VEO3 fast image to video subworkflow'",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "fwK5R932JWKOZhf8",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/fwK5R932JWKOZhf8",
+          "cachedResultName": "Fal.ai FFMPEG Merge Videos"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "videoUrls": "={{ $json.resultUrls }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "videoUrls",
+              "displayName": "videoUrls",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "array",
+              "removed": false
+            },
+            {
+              "id": "resolution",
+              "displayName": "resolution",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        384,
+        592
+      ],
+      "id": "21664929-a015-4b0b-998e-e488694f02b6",
+      "name": "Call 'Fal.ai FFMPEG Merge Videos'"
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "resultUrls"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        192,
+        592
+      ],
+      "id": "6d296b81-4185-4947-89b3-023b6713a8b5",
+      "name": "Aggregate generated video urls"
+    },
+    {
+      "parameters": {
+        "content": "## Cost Breakdown (24 Seconds Video)\n\n1. Veo 3.1 - $0.9 per video (24 seconds long)\n2. Gemini 2.5 pro image analysis model - ~$0.004 per image.\n3. ffmpeg-api/merge-videos - 0.00408 per run\n4. Claude Sonnet 4.5 (AI Agent) -  0.0514 per run \n\n**Total = $0.96**",
+        "height": 224,
+        "width": 496
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        880,
+        208
+      ],
+      "typeVersion": 1,
+      "id": "2617ae04-ae08-419c-95b9-719ff4229065",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "# VEO 3.1 + n8n: AI Car Commercial Generator\n**This template was created by Alex Safari.**\nSubscribe to my YouTube channel for more AI automation tutorials:\n👉 https://www.youtube.com/@alexsafari1\n\n📺 **Watch the Full Tutorial Video:**\nhttps://youtu.be/3rzR868er_M\n\n## Overview\nThis workflow transforms a **single car photo** into a **multi-scene, cinematic car commercial**—automatically.\n\nIt uses an **AI Creative Director Agent** (Claude Sonnet 4.5) to write a professional storyboard, then generates and stitches multiple video clips using **VEO 3.1** and **Fal.ai FFMPEG**.\n\nPerfect for agencies, marketers, or anyone wanting broadcast-quality video ads without a film crew or an editing suite.\n\n## Workflow Breakdown\n\n### 1. On Form Submission\n* Collects the user-uploaded car photo.\n* Captures the desired ad length (e.g., 24, 32, 40 seconds).\n* Captures a simple creative description (or can be left vague).\n\n### 2. Upload Car Photo\n* Stores the uploaded photo in Cloudinary to get a public URL.\n\n### 3. Get Number of Scenes\n* Calculates how many 8-second scenes to create based on the total ad length selected.\n\n### 4. Analyze Car Photo (Gemini 2.5 Pro)\n* Performs detailed visual analysis of the car (model, color, materials, brand) and outputs a structured YAML.\n\n### 5. Creative Director AI Agent (Claude Sonnet 4.5)\n* Takes the car's YAML, scene count, and user's description.\n* Writes a full, multi-scene storyboard in JSON format, complete with `CAM:`, `SVX:`, and `EMOTION:` tags for each 2-second beat.\n* Uses a **\"Smart Contextual Fallback\"**: If the user description is vague, it auto-selects a theme (e.g., \"Street to Track\" for a sports car, \"Conquering Nature\" for an SUV).\n\n### 6. Split Out Scenes\n* Separates each scene from the AI-generated storyboard to be processed individually.\n\n### 7. Call 'Kie.ai VEO 3.1' (Subworkflow)\n* Generates an 8-second video clip for *each individual scene* using the original photo and the new scene prompt.\n\n### 8. Aggregate Videos\n* Collects the URLs of all generated video clips into a single array.\n\n### 9. Call 'Fal.ai FFMPEG Merge' (Subworkflow)\n* Stitches all the individual video clips together into one seamless, final video.\n\n### 10. Download Video\n* Downloads the final merged commercial.\n\n## ⚙️ Tech Stack\n* **n8n** – automation & workflow logic\n* **VEO 3.1 (Kie.ai)** – image-to-video engine\n* **Gemini 2.5 Pro (Google)** – image analysis\n* **Claude Sonnet 4.5 (OpenRouter)** – creative direction agent\n* **Fal.ai (FFMPEG)** – video merging\n* **Cloudinary** – file management\n\n---\n\n📧 **Email me directly**: contact@loopsera.com\nFor quick questions, customisation requests, or workflow troubleshooting.\n\n🌐 **Visit my website**: [https://loopsera.com](https://loopsera.com)\nExplore more automation templates, services, and case studies.\n\n📞 **Book a Discovery Call**: [https://cal.com/loopsera/ai-opportunity-audit](https://cal.com/loopsera/ai-opportunity-audit)\nFor businesses that need a custom AI agent built around their Instagram and ecommerce setup.\n\n🎓 **1-on-1 Coaching Session**: [https://cal.com/loopsera/n8n-ai-agent-coaching-session](https://cal.com/loopsera/n8n-ai-agent-coaching-session)\nPersonalised coaching to help you build, troubleshoot, or optimise n8n AI workflows. Perfect for both beginners and advanced users.\n\n💬 **Join the AI Builder’s Boardroom (Skool Community)**: [https://www.skool.com/ai-builders-boardroom-1717](https://www.skool.com/ai-builders-boardroom-1717) — a professional community for builders creating AI agents that talk, listen, and sell, focused on deploying the digital workforce of the future.",
+        "height": 1840,
+        "width": 1024
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1248,
+        -32
+      ],
+      "typeVersion": 1,
+      "id": "8fee49b6-8282-49d5-b161-4b5e72441c07",
+      "name": "Sticky Note1"
+    }
+  ],
+  "pinData": {
+    "Limit": [
+      {
+        "json": {
+          "scene_number": 1,
+          "body": "🎬 Scene 1: The Awakening (Volcanic Badlands)\n\nConcept: Introduce the VelociRaptor as a dormant predator waking in a harsh, primordial landscape.\n\n[0–2s] HOOK:\nCAM: Extreme close-up on the 'VELOCIRAPTOR' laser-cut lettering on the front bumper. Black volcanic ash swirls across the metal surface in slow motion.\nSVX: A deep, primal 'rumble' (like distant thunder). Wind howling across volcanic rock. A sharp 'ping' as a piece of debris hits the metal.\nEMOTION: Mysterious, Ominous.\n\n[2–4s] CONTEXT:\nCAM: The camera pulls back slowly, revealing the full front three-quarters of the glossy black VelociRaptor emerging from a cloud of black ash and steam. The volcanic landscape behind it is desolate—cracked obsidian rock, geothermal vents releasing steam. The bronze wheel accents catch the harsh, overcast light.\nSVX: The 'hiss' of geothermal steam. A low, mechanical 'whir' as the truck's systems activate. BGM begins—a slow, ominous bass drone.\nEMOTION: 'Something wakes,' Foreboding.\n\n[4-6s] CLIMAX:\nCAM: Close-up on the C-shaped LED daytime running lights 'igniting' in sequence, left then right, like predatory eyes opening. The 'HENNESSEY' text on the hood is now visible through the clearing ash.\nSVX: A sharp, futuristic 'beep-beep' as the LEDs activate. The truck's supercharged V6 engine 'roars' to life—a sustained, animalistic growl that reverberates off the volcanic rocks.\nEMOTION: 'Awakening,' Power.\n\n[6–8s] RESOLUTION:\nCAM: Wide shot from behind the truck. The VelociRaptor sits stationary on a ridge overlooking a vast, hostile volcanic plain. Its brake lights flare red for a moment, then it lurches forward, BFGoodrich tires 'clawing' into the black sand, sending a rooster tail of ash behind it as it descends into the wasteland.\nSVX: The 'growl' of the engine deepens. The 'crunch' and 'hiss' of tires biting into loose volcanic gravel. BGM beat drops—heavy, rhythmic percussion.\nEMOTION: 'The Hunt Begins,' Unstoppable."
+        }
+      },
+      {
+        "json": {
+          "scene_number": 2,
+          "body": "🎬 Scene 2: The Pursuit (River Gorge)\n\nConcept: A high-speed chase through a treacherous river canyon, showcasing the truck's agility and brutal power.\n\n[0–2s] HOOK:\nCAM: Low-angle tracking shot from the side. The VelociRaptor is 'flying' through a shallow, rocky river at high speed, water exploding in massive arcs from all four BFGoodrich All-Terrain tires. The sun breaks through storm clouds, backlighting the water spray in gold.\nSVX: The 'ROAR' of the supercharged engine at full throttle. The 'CRASH' and 'WHOOSH' of water being obliterated. BGM intensifies—fast, tribal drums.\nEMOTION: 'Relentless,' Aggression.\n\n[2–4s] CONTEXT:\nCAM: The camera switches to a helmet-mounted POV shot from inside the cab (looking out the windshield). The driver's gloved hands grip the wheel tightly. The view ahead is chaotic—the river twists sharply left, and massive boulders jut out of the water. The front skid plate is visible at the bottom of the frame, water streaming over it.\nSVX: Heavy breathing from the driver. The 'clunk-clunk' of the truck's suspension absorbing brutal impacts. Water 'slaps' against the windshield. The engine's supercharger 'whines' at redline.\nEMOTION: 'Focus,' Intensity.\n\n[4-6s] CLIMAX:\nCAM: Rapid cuts: (1) The front bumper's bull bar 'smashes' through a wall of river reeds, sending them flying. (2) A close-up on the rear fender flare as the 'VELOCIRAPTOR 500' decal blurs past. (3) An aerial drone shot shows the VelociRaptor carving a white, foaming path through the turquoise river, dwarfed by towering red canyon walls on either side.\nSVX: The 'crack' and 'snap' of reeds breaking. A sustained 'VROOOOM' as the truck accelerates out of a tight turn. BGM hits a frenetic peak—distorted electric guitar riff.\nEMOTION: 'Chaos,' Exhilaration.\n\n[6–8s] RESOLUTION:\nCAM: The VelociRaptor 'launches' out of the river onto a steep, muddy embankment. The camera is positioned low on the bank, looking up. The truck is airborne for a split second, all four wheels off the ground, water and mud streaming off its undercarriage in slow motion (96fps). It lands hard, suspension compressing, and then rockets up the hill, disappearing into a forest.\nSVX: A brief moment of 'silence' as the truck is airborne. Then a massive 'THUD' as it lands, followed by the 'roar' of the engine and the 'squelch' of tires in mud. BGM cuts to a single, low 'BOOM.'\nEMOTION: 'Victory,' Escape."
+        }
+      },
+      {
+        "json": {
+          "scene_number": 3,
+          "body": "🎬 Scene 3: The Summit (Mountain Peak)\n\nConcept: The payoff. The VelociRaptor conquers the ultimate terrain, claiming its place at the top.\n\n[0–2s] HOOK:\nCAM: Extreme slow motion (120fps). The glossy black VelociRaptor crests a rocky mountain ridge, framed against a stunning, fiery orange-and-purple sunset sky. Dust particles hang in the air around it, glowing like embers.\nSVX: BGM shifts to a soaring, epic orchestral track (strings and horns). The sound of the engine is muted, replaced by the 'whoosh' of wind and the 'crunch' of rocks under tires in slow motion.\nEMOTION: 'Majesty,' Triumph.\n\n[2–4s] CONTEXT:\nCAM: The camera orbits around the stationary VelociRaptor in a smooth, 180-degree arc. The truck is parked on the very peak of the mountain, wheels straddling a narrow rock spine. Far below, a vast wilderness stretches out—forests, rivers, and distant volcanic peaks. The 'FORD' grille and 'HENNESSEY' hood text are prominently visible.\nSVX: A gentle, 'ticking' sound from the cooling engine. A distant eagle's cry. The wind 'howls' softly. BGM swells with a beautiful, triumphant melody.\nEMOTION: 'Solitude,' Awe.\n\n[4-6s] CLIMAX:\nCAM: Close-up sequence: (1) The bronze-accented multi-spoke wheel, caked in mud and dust, but still gleaming. (2) The silver front skid plate, now battle-scarred with fresh scratches. (3) A bead of water dripping from the 'VELOCIRAPTOR' bumper lettering. (4) The C-shaped LED running lights, still glowing bright against the twilight.\nSVX: Each visual cut is punctuated by a soft 'tick' or 'drip' sound. BGM builds to a final, powerful crescendo.\nEMOTION: 'Earned,' Respect.\n\n[6–8s] RESOLUTION:\nCAM: Final hero shot—a wide, cinematic frame from a low angle, looking up at the VelociRaptor silhouetted against the blazing sunset. The 'Hennessey' script logo on the rear of the truck bed is just visible. The sky is a dramatic gradient of orange, red, and deep purple. A single lens flare crosses the frame.\nSVX: The music hits a final, epic 'STINGER' and fades to near silence. The last sound is the 'tick-tick-tick' of the hot engine cooling and the lonely wind. A deep, authoritative male voiceover: 'VelociRaptor 500. Apex Predator.'\nEMOTION: 'Legendary,' Untouchable."
+        }
+      }
+    ]
+  },
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Upload_car_photo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload_car_photo": {
+      "main": [
+        [
+          {
+            "node": "Get number of scenes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get number of scenes": {
+      "main": [
+        [
+          {
+            "node": "Analyze car photo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze car photo": {
+      "main": [
+        [
+          {
+            "node": "Creative Director AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Creative Director AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Creative Director AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Structured Output Parser",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Creative Director AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "Call 'Kie.ai VEO3 fast image to video subworkflow'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'Kie.ai VEO3 fast image to video subworkflow'": {
+      "main": [
+        [
+          {
+            "node": "Aggregate generated video urls",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'Fal.ai FFMPEG Merge Videos'": {
+      "main": [
+        [
+          {
+            "node": "Download Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate generated video urls": {
+      "main": [
+        [
+          {
+            "node": "Call 'Fal.ai FFMPEG Merge Videos'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "6eae3ec0-e131-4c05-82c9-3809fbc23613",
+  "meta": {
+    "instanceId": "a5ce708af879277dd7a639d4c71ccbb43dff04b68ea0eebb67bedcb2e448ec48"
+  },
+  "id": "XXGxdKrt7yzBKg0X",
+  "tags": []
+}
